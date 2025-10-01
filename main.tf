@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "=4.1.0"
+      version = ">=3.0.0"
     }
   }
 }
@@ -45,19 +45,57 @@ resource "azurerm_storage_account" "example" {
   min_tls_version          = "TLS1_2"
 }
 
+# Kontener na logi logowań
+resource "azurerm_storage_container" "logi_logowan" {
+  name                  = "logi_logowan"
+  storage_account_name  = azurerm_storage_account.example.name
+  container_access_type = "private"
+}
+
+# Key Vault
+resource "azurerm_key_vault" "example" {
+  name                        = "kvworkshopt2s05"
+  location                    = "westeurope"
+  resource_group_name         = "rg-05"
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  sku_name                    = "standard"
+  purge_protection_enabled    = false
+  enabled_for_disk_encryption = true
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+    secret_permissions = ["get", "set", "list"]
+  }
+}
+
+data "azurerm_client_config" "current" {}
+
+# Secret z hasłem do bazy
+resource "azurerm_key_vault_secret" "mysql_password" {
+  name         = "mysql-password"
+  value        = azurerm_mysql_flexible_server.burstable.administrator_password
+  key_vault_id = azurerm_key_vault.example.id
+}
+
 # Azure Database for MySQL (burstable)
 resource "azurerm_mysql_flexible_server" "burstable" {
   name                   = "mysql-burstable-05-new-9542653542"
   resource_group_name    = "rg-05"
   location               = "polandcentral"
   administrator_login    = "mysqladminuser"
-  administrator_password = "P@ssw0rd1234!"
+  administrator_password = random_password.mysql_password.result
   sku_name               = "B_Standard_B1ms"
   version                = "8.0.21"
   zone                   = "1"
   backup_retention_days  = 7
   geo_redundant_backup_enabled = false
   # high_availability i authentication nie są obsługiwane w tym zasobie
+}
+
+# Generowanie losowego hasła do bazy
+resource "random_password" "mysql_password" {
+  length  = 16
+  special = true
 }
 
 # Reguła firewalla dla MySQL Flexible Server (dostęp z zewnątrz)
