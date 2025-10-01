@@ -60,3 +60,12 @@ resource "azurerm_mysql_flexible_server" "burstable" {
   # high_availability i authentication nie są obsługiwane w tym zasobie
 }
 
+# Reguła firewalla dla MySQL Flexible Server (dostęp z zewnątrz)
+resource "azurerm_mysql_flexible_server_firewall_rule" "allow_my_ip" {
+  name                = "allow-all"
+  resource_group_name = azurerm_mysql_flexible_server.burstable.resource_group_name
+  server_name         = azurerm_mysql_flexible_server.burstable.name
+  start_ip_address    = "0.0.0.0"
+  end_ip_address      = "255.255.255.255"
+}
+
