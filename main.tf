@@ -49,7 +49,7 @@ resource "azurerm_storage_account" "example" {
 resource "azurerm_mysql_flexible_server" "burstable" {
   name                   = "mysql-burstable-05"
   resource_group_name    = "rg-05"
-  location               = "westeurope"
+  location               = "northeurope"
   administrator_login    = "mysqladminuser"
   administrator_password = "P@ssw0rd1234!"
   sku_name               = "B_Standard_B1ms"
