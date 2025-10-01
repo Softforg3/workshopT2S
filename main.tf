@@ -47,7 +47,7 @@ resource "azurerm_storage_account" "example" {
 
 # Azure Database for MySQL (burstable)
 resource "azurerm_mysql_flexible_server" "burstable" {
-  name                   = "mysql-burstable-05"
+  name                   = "mysql-burstable-05-9542653542"
   resource_group_name    = "rg-05"
   location               = "northeurope"
   administrator_login    = "mysqladminuser"
