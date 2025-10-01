@@ -188,59 +188,5 @@ jobs:
         run: |
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/example-webapp:latest
 
-  deploy-infra:
-    name: Deploy Infrastructure
-    runs-on: ubuntu-latest
-    needs: build-and-push
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: set-variables
-        shell: 'pwsh'
-        run: |
-          @("ARM_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}",
-            "ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}",
-            "ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}",
-            "ARM_USE_OIDC=true",
-            "ARM_USE_AZUREAD=true") | Out-File -FilePath $env:GITHUB_ENV -Append
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.0
-
-      - name: Initialize Terraform
-        shell: 'pwsh'
-        run: terraform init
-
-      - name: Plan Terraform Changes
-        shell: 'pwsh'
-        run: terraform plan
-
-      - name: Apply Terraform Changes
-        shell: 'pwsh'
-        run: terraform apply -auto-approve
-
-  update-app-service:
-    name: Update App Service with Latest Image
-    runs-on: ubuntu-latest
-    needs: deploy-infra
-
-    steps:
-      - name: 'Azure login'
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        
-      - name: Update App Service
-        run: |
-          az webapp config container set \
-            --name example-webapp-123123i95u8fhwfdsewdwsa \
-            --resource-group example-resources \
-            --docker-custom-image-name ${{ secrets.ACR_LOGIN_SERVER }}/example-webapp:latest \
-            --docker-registry-server-url https://${{ secrets.ACR_LOGIN_SERVER }}
 ```
